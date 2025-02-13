@@ -2,6 +2,7 @@ import pytest
 from user import User, PrivilegeLevel
 from house import House, create_house, get_house, update_house, delete_house, HouseNotFoundError
 
+@pytest.fixture
 def sample_owner():
     return User(
         user_id="owner123",
@@ -10,6 +11,7 @@ def sample_owner():
         privilege=PrivilegeLevel.OWNER
     )
 
+@pytest.fixture
 def sample_house(sample_owner):
     return House(
         house_id="house456",
