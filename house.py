@@ -33,13 +33,13 @@ def create_house(house: House) -> House:
 # Read/Get
 def get_house(house_id: str) -> House:
     if house_id not in houses_db:
-        raise HouseNotFoundError(f"User {house_id} not found")
+        raise HouseNotFoundError(f"House {house_id} not found")
     return houses_db[house_id]
 
 # Update
 def update_house(updated_house: House) -> House:
     if update_house.house_id not in houses_db:
-        raise HouseNotFoundError(f"User {updated_house.house_id} not found")
+        raise HouseNotFoundError(f"House {updated_house.house_id} not found")
     
     houses_db[update_house.house_id] = updated_house
     return updated_house
@@ -47,6 +47,6 @@ def update_house(updated_house: House) -> House:
 # Delete
 def delete_house(house_id: str) -> None:
     if house_id not in houses_db:
-        raise HouseNotFoundError(f"User {house_id} not found")
+        raise HouseNotFoundError(f"House {house_id} not found")
     
     del houses_db[house_id]
