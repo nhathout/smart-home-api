@@ -55,9 +55,9 @@ def test_update_house(sample_owner, sample_house):
     assert retrieved.num_baths == 3
     assert retrieved.gps_location == (34.0522, -118.2437)
 
-def test_update_nonexistent_house(sample_house):
+def test_update_nonexistent_house(test_house):
     with pytest.raises(HouseNotFoundError):
-        update_house(sample_house)  # house was never created
+        update_house(test_house)  # house was never created
 
 def test_delete_house(sample_house):
     create_house(sample_house)
