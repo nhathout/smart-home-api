@@ -1,7 +1,7 @@
 import pytest
 from user import User, create_user, get_user, update_user, delete_user, UserNotFoundError
 
-def test_full_user_lifecycle():
+def test_full_user():
     # Create
     user = User("1", "nhathout", "nhathout@example.com")
     create_user(user)

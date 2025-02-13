@@ -39,7 +39,7 @@ def get_house(house_id: str) -> House:
 # Update
 def update_house(updated_house: House) -> House:
     if update_house.house_id not in houses_db:
-        raise HouseNotFoundError(f"User {update_house.house_id} not found")
+        raise HouseNotFoundError(f"User {updated_house.house_id} not found")
     
     houses_db[update_house.house_id] = updated_house
     return updated_house

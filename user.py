@@ -43,7 +43,7 @@ def get_user(user_id: str) -> User:
 # Update
 def update_user(updated_user: User) -> User:
     if update_user.user_id not in users_db:
-        raise UserNotFoundError(f"User {update_user.user_id} not found")
+        raise UserNotFoundError(f"User {updated_user.user_id} not found")
     
     users_db[update_user.user_id] = updated_user
     return updated_user
