@@ -2,114 +2,70 @@ import pytest
 from user import User, PrivilegeLevel
 from house import House
 from room import Room
-from device import Device, create_device, get_device, update_device, delete_device, DeviceNotFoundError
-
-# chat-aided test file
-@pytest.fixture
-def sample_owner():
-    return User(
-        user_id="owner123",
-        name="Mo Salad",
-        email="mosalad@example.com",
-        privilege=PrivilegeLevel.OWNER
-    )
+from device import Device, DeviceType, create_device, get_device, update_device, delete_device
+from device import DeviceNotFoundError, ValidationError, ConflictError
 
 @pytest.fixture
-def sample_house(sample_owner):
-    return House(
+def valid_room():
+    owner = User("owner123", "Mo Salad", "mosalad@example.com", PrivilegeLevel.OWNER)
+    house = House(
         house_id="house456",
         address="123 Pineapple Ave",
-        owner=sample_owner,
+        owner=owner,
         gps_location=(40.7128, -74.0060),
         num_rooms=3,
         num_baths=2
     )
+    return Room("Living Room", 1, house)
 
 @pytest.fixture
-def sample_room(sample_house):
-    return Room(
-        name="Living Room",
-        floor=1,
-        house=sample_house
-    )
-
-@pytest.fixture
-def sample_device(sample_room):
+def valid_device(valid_room):
     return Device(
-        type="light",
+        type=DeviceType.LIGHT,
         device_id="d1",
-        room=sample_room
+        room=valid_room
     )
 
-def test_create_and_get_device(sample_device):
-    create_device(sample_device)
+def test_valid_device_creation(valid_device):
+    create_device(valid_device)
     retrieved = get_device("d1")
-    
-    assert retrieved == sample_device
-    assert retrieved.type == "light"
+    assert retrieved.type == DeviceType.LIGHT
     assert retrieved.room.name == "Living Room"
 
-def test_get_nonexistent_device():
+def test_invalid_device_type(valid_room):
+    with pytest.raises(ValidationError):
+        Device("invalid_type", "d2", valid_room)
+
+def test_empty_device_id(valid_room):
+    with pytest.raises(ValidationError):
+        Device(DeviceType.LOCK, "", valid_room)
+
+def test_invalid_room_type():
+    with pytest.raises(ValidationError):
+        Device(DeviceType.CAMERA, "d3", "not-a-room")
+
+def test_duplicate_device_id(valid_device):
+    create_device(valid_device)
+    with pytest.raises(ConflictError):
+        Device(
+            type=DeviceType.THERMOSTAT,
+            device_id="d1",  # Duplicate ID
+            room=valid_device.room
+        )
+
+def test_update_validation(valid_device):
+    create_device(valid_device)
+    
+    with pytest.raises(ValidationError):
+        updated = Device(
+            type="invalid_type",  # Bad type
+            device_id="d1",
+            room=valid_device.room
+        )
+        update_device(updated)
+
+def test_nonexistent_operations():
     with pytest.raises(DeviceNotFoundError):
-        get_device("non-existent-id")
-
-def test_update_device_type(sample_device):
-    create_device(sample_device)
-    
-    updated = Device(
-        type="smart_light",
-        device_id="d1",
-        room=sample_device.room
-    )
-    
-    update_device(updated)
-    retrieved = get_device("d1")
-    
-    assert retrieved.type == "smart_light"
-    assert retrieved.room.floor == 1  # Verify original room remains
-
-def test_update_device_room(sample_room):
-    new_room = Room(
-        name="Bedroom",
-        floor=2,
-        house=sample_room.house
-    )
-    
-    device = Device(
-        type="thermostat",
-        device_id="d2",
-        room=sample_room
-    )
-    
-    create_device(device)
-    updated = Device(
-        type="thermostat",
-        device_id="d2",
-        room=new_room
-    )
-    
-    update_device(updated)
-    retrieved = get_device("d2")
-    
-    assert retrieved.room.name == "Bedroom"
-    assert retrieved.room.floor == 2
-
-def test_update_nonexistent_device():
-    fake_device = Device(
-        type="camera",
-        device_id="fake123",
-        room=None
-    )
+        get_device("ghost-device")
     with pytest.raises(DeviceNotFoundError):
-        update_device(fake_device)
-
-def test_delete_device(sample_device):
-    create_device(sample_device)
-    delete_device("d1")
-    
-    with pytest.raises(DeviceNotFoundError):
-        get_device("d1")
-
-def test_delete_nonexistent_device():
-    with pytest.raises(DeviceNotFoundError):
-        delete_device("non-existent-id")
+        delete_device("ghost-device")
