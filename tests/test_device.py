@@ -5,6 +5,14 @@ from room import Room
 from device import Device, DeviceType, create_device, get_device, update_device, delete_device
 from device import DeviceNotFoundError, ValidationError, ConflictError
 
+import os
+
+@pytest.fixture(autouse=True)
+def clean_devices_json():
+    if os.path.exists("devices.json"):
+        os.remove("devices.json")
+    yield
+
 @pytest.fixture
 def valid_room():
     owner = User("owner123", "Mo Salad", "mosalad@example.com", PrivilegeLevel.OWNER)
@@ -43,16 +51,17 @@ def test_invalid_room_type():
         Device(DeviceType.CAMERA, "d3", "not-a-room")
 
 def test_duplicate_device_id(valid_device):
+    create_device(valid_device)
+    
     duplicate = Device(
         type=DeviceType.THERMOSTAT,
         device_id=valid_device.device_id,
         room=valid_device.room
     )
     
-    # already created device
-    # create_device(valid_device)
     with pytest.raises(ConflictError):
         create_device(duplicate)
+
 
 def test_update_validation(valid_device):
     # create_device(valid_device)
