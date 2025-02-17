@@ -49,12 +49,13 @@ def test_duplicate_device_id(valid_device):
         room=valid_device.room
     )
     
-    create_device(valid_device)
+    # already created device
+    # create_device(valid_device)
     with pytest.raises(ConflictError):
         create_device(duplicate)
 
 def test_update_validation(valid_device):
-    create_device(valid_device)
+    # create_device(valid_device)
     
     with pytest.raises(ValidationError):
         updated = Device(
