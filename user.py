@@ -1,11 +1,10 @@
 from enum import Enum
+import re
 
 class PrivilegeLevel(Enum):
     OWNER = "owner"
-    ADMIN = "admin"  
-    DEV = "dev"      
-    REALTOR = "realtor"
-    RESIDENT = "resident" 
+    ADMIN = "admin"
+    RESIDENT = "resident"
 
 class User:
     def __init__(self, user_id: str, name: str, email: str, privilege: PrivilegeLevel):
@@ -14,36 +13,68 @@ class User:
         self.email = email
         self.privilege = privilege
 
-    # needed for testing
     def __eq__(self, other):
         return (
-                self.user_id == other.user_id and 
-                self.name == other.name and 
-                self.email == other.email and 
-                self.privilege == other.privilege
-                )
+            self.user_id == other.user_id and 
+            self.name == other.name and 
+            self.email == other.email and 
+            self.privilege == other.privilege
+        )
 
-users_db = {} # to store all users
+users_db = {}
 
-class UserNotFoundError(Exception):
+class APIError(Exception):
+    """Base class for API exceptions"""
     pass
 
-## C R U D 
+class ValidationError(APIError):
+    pass
+
+class NotFoundError(APIError):
+    pass
+
+class ConflictError(APIError):
+    pass
+
+# input validation helper functions
+def validate_email(email: str):
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        raise ValidationError("Invalid email format")
+
+def validate_privilege(privilege: PrivilegeLevel):
+    if privilege not in PrivilegeLevel:
+        raise ValidationError(f"Invalid privilege level: {privilege}")
+
+## C R U D
 # Create
 def create_user(user: User) -> User:
+    # Input validation
+    validate_email(user.email)
+    validate_privilege(user.privilege)
+    
+    if user.user_id in users_db:
+        raise ConflictError(f"User ID {user.user_id} already exists")
+    
+    if len(user.name) < 1 or len(user.name) > 50:
+        raise ValidationError("Name must be 1-50 characters")
+    
     users_db[user.user_id] = user
     return user
 
-# Read/Get
+# Read
 def get_user(user_id: str) -> User:
     if user_id not in users_db:
-        raise UserNotFoundError(f"User {user_id} not found")
+        raise NotFoundError(f"User {user_id} not found")
     return users_db[user_id]
 
 # Update
 def update_user(updated_user: User) -> User:
     if updated_user.user_id not in users_db:
-        raise UserNotFoundError(f"User {updated_user.user_id} not found")
+        raise NotFoundError(f"User {updated_user.user_id} not found")
+    
+    # Validate updated data
+    validate_email(updated_user.email)
+    validate_privilege(updated_user.privilege)
     
     users_db[updated_user.user_id] = updated_user
     return updated_user
@@ -51,6 +82,5 @@ def update_user(updated_user: User) -> User:
 # Delete
 def delete_user(user_id: str) -> None:
     if user_id not in users_db:
-        raise UserNotFoundError(f"User {user_id} not found")
-    
+        raise NotFoundError(f"User {user_id} not found")
     del users_db[user_id]
