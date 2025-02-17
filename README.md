@@ -5,21 +5,20 @@ This repository provides a *Python-based* Smart Home API that manages **Users**,
 ---
 
 ## Overview
-The **Smart Home API** is a collection of Python modules that implement the following:
+Initially, this API used **in-memory dictionaries** (`users_db`, `houses_db`, etc.) for demonstration. **Now**, I store all data in **JSON files** (e.g., `users.json`, `houses.json`, etc.). Each CRUD operation loads the JSON, modifies it in memory, and saves it back. No external databases or hardware connections are used.
 
-- **Data Models & Classes**: Definitions of `User`, `House`, `Room`, and `Device` objects.  
-- **CRUD Operations**: `Create`, `Read`, `Update`, `Delete` functions for each data model.  
-- **Validation & Error Handling**: Ensures data integrity and proper exception raising.  
-- **In-Memory Storage**: For demonstration, data is stored in simple dictionaries (e.g., `users_db`, `houses_db`, etc.)—no external database is used.  
+Key focuses include:
+- **Data Models & Classes**: `User`, `House`, `Room`, `Device`.  
+- **CRUD Operations**: `Create`, `Read`, `Update`, `Delete` per model.  
+- **Validation & Error Handling**: Properly raising exceptions when inputs are invalid.  
+- **JSON Storage**: Data is now persisted across runs, unless you delete the JSON files.
 
 ---
 
 ## API Modules & Data Structures
 
 ### Users
-- **Data Structure**:  
-  Each `User` is stored in the in-memory dictionary `users_db`, keyed by `user_id`.  
-
+- **JSON File**: `users.json`  
 - **Fields**:
   - `user_id: str`  
   - `name: str` (1–50 characters)  
@@ -43,13 +42,11 @@ The **Smart Home API** is a collection of Python modules that implement the foll
      - Raises `NotFoundError` if not found.  
 
 ### Houses
-- **Data Structure**:  
-  Each `House` is stored in the `houses_db` dictionary, keyed by `house_id`.
-
+- **JSON File**: `houses.json`  
 - **Fields**:
   - `house_id: str`  
   - `address: str`  
-  - `owner: User` (should be `PrivilegeLevel.OWNER`)  
+  - `owner: User`  
   - `gps_location: tuple[float, float]`  
   - `num_rooms: int`  
   - `num_baths: int`  
@@ -57,6 +54,7 @@ The **Smart Home API** is a collection of Python modules that implement the foll
 - **API**:
   1. `create_house(house: House) -> House`:  
      - Creates a new house entry.  
+     - Raises `ConflictError` if `house_id` already exists.  
   2. `get_house(house_id: str) -> House`:  
      - Retrieves a house by its ID.  
      - Raises `HouseNotFoundError` if not found.  
@@ -68,9 +66,7 @@ The **Smart Home API** is a collection of Python modules that implement the foll
      - Raises `HouseNotFoundError` if not found.  
 
 ### Rooms
-- **Data Structure**:  
-  Each `Room` is stored in `rooms_db`, keyed by the room’s `name`.
-
+- **JSON File**: `rooms.json`  
 - **Fields**:
   - `name: str`  
   - `floor: int`  
@@ -79,20 +75,19 @@ The **Smart Home API** is a collection of Python modules that implement the foll
 - **API**:
   1. `create_room(room: Room) -> Room`:  
      - Creates a new room entry.  
+     - Raises `ConflictError` if the room name already exists.  
   2. `get_room(room_name: str) -> Room`:  
      - Retrieves a room by its name.  
      - Raises `RoomNotFoundError` if not found.  
-  3. `update_room(updated_room: Room) -> Room`:  
-     - Updates room details.  
+  3. `update_room(old_room: Room, new_room_name: str) -> Room`:  
+     - Renames or otherwise updates a room’s name.  
      - Raises `RoomNotFoundError` if not found.  
   4. `delete_room(room_name: str) -> None`:  
      - Deletes a room by name.  
      - Raises `RoomNotFoundError` if not found.  
 
 ### Devices
-- **Data Structure**:  
-  Each `Device` is stored in `devices_db`, keyed by `device_id`.
-
+- **JSON File**: `devices.json`  
 - **Fields**:
   - `type: DeviceType` (Enum: `LIGHT`, `THERMOSTAT`, `CAMERA`, `LOCK`, `SENSOR`)  
   - `device_id: str` (non-empty)  
@@ -102,7 +97,7 @@ The **Smart Home API** is a collection of Python modules that implement the foll
   1. `create_device(device: Device) -> Device`:  
      - Creates a new device entry.  
      - Raises `ConflictError` if `device_id` already exists.  
-     - Raises `ValidationError` if device type or ID is invalid.  
+     - Raises `ValidationError` if data (type or ID) is invalid.  
   2. `get_device(device_id: str) -> Device`:  
      - Retrieves a device by its ID.  
      - Raises `DeviceNotFoundError` if not found.  
@@ -116,13 +111,13 @@ The **Smart Home API** is a collection of Python modules that implement the foll
 ---
 
 ## Error Handling & Validation
-We focus heavily on **error handling** and **input validation**:
+I focus heavily on **error handling** and **input validation**:
 
-- **ValidationError**: Raised if data (e.g., email format, name length, or device ID) is invalid.  
-- **NotFoundError** / Custom “NotFoundError”-like classes: Raised when a requested resource does not exist (`HouseNotFoundError`, `RoomNotFoundError`, `DeviceNotFoundError`, etc.).  
-- **ConflictError**: Raised when creating a resource with an existing unique ID.  
+- **ValidationError**: Raised if data (e.g., email format, room name, device ID) is invalid.  
+- **NotFoundError** / module-specific “NotFoundError” classes: e.g., `HouseNotFoundError`, `RoomNotFoundError`, `DeviceNotFoundError`. Raised when a requested resource doesn’t exist in the JSON file.  
+- **ConflictError**: Raised when creating a resource with an existing unique ID or name.  
 
-Each module’s CRUD functions contain the logic to *validate inputs* and raise appropriate exceptions to *signal error states* back to the caller.
+Each module’s CRUD function loads data from its JSON, checks for conflicts or invalid data, raises exceptions if needed, and writes changes back to JSON on success.
 
 ---
 
@@ -133,3 +128,14 @@ Unit tests (written with **pytest**) verify both **happy-path** (valid) scenario
 - **`test_house.py`**: Validates house CRUD and ensures `HouseNotFoundError` is raised as needed.  
 - **`test_room.py`**: Covers rooms with proper references to houses.  
 - **`test_device.py`**: Ensures device type, IDs, and references to rooms are validated.  
+
+> **Important**: Because JSON files persist data across tests, any test that expects an empty store at the start may remove or reset the corresponding `.json` file before running. Alternatively, each test that requires data can explicitly create it first so the test remains self-contained.
+
+---
+
+## GitHub Actions & Coverage
+I use **GitHub Actions** to:
+- **Run tests** automatically on every push/pull request  
+- **Generate coverage reports**  
+
+You can view test results and coverage details under your repository’s Actions tab.
