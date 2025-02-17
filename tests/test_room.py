@@ -53,10 +53,9 @@ def test_duplicate_room_name(valid_room):
 
 def test_update_validation(valid_room): 
     with pytest.raises(ValidationError):
-        # updated = Room("Living Room", -2, valid_room.house)
+        updated = Room("Living Room", -2, valid_room.house)
         ## used to raise ValidationError, commented out for github actions
-        update_room(valid_room, "Noah's Room")
-        print(valid_room.name)
+        update_room(updated, "Noah's Room")
         # my own test
 
 def test_nonexistent_operations():
