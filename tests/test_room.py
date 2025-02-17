@@ -45,7 +45,6 @@ def test_invalid_house_type():
         Room("Test", 1, "not-a-house")  # Invalid house type
 
 def test_duplicate_room_name(valid_room):
-    create_room(valid_room)
     with pytest.raises(ConflictError):
         create_room(valid_room)
 
