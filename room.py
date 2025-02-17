@@ -50,12 +50,12 @@ def get_room(room_name: str) -> Room:
     return rooms_db[room_name]
 
 # U
-def update_room(updated_room: Room) -> Room:
-    if updated_room.name not in rooms_db:
-        raise RoomNotFoundError(f"Room '{updated_room.name}' not found")
+def update_room(old_room: Room, new_room_name: str) -> Room:
+    if old_room.name not in rooms_db:
+        raise RoomNotFoundError(f"Room '{old_room.name}' not found")
     
-    rooms_db[updated_room.name] = updated_room
-    return updated_room
+    rooms_db[old_room.name] = new_room_name
+    return old_room
 
 # D
 def delete_room(room_name: str) -> None:
