@@ -1,4 +1,3 @@
-from user import User
 from house import House
 
 class Room:
