@@ -2,6 +2,13 @@ import pytest
 from user import User, PrivilegeLevel
 from house import House, create_house, get_house, update_house, delete_house
 from house import HouseNotFoundError, ValidationError, ConflictError
+import os
+
+@pytest.fixture(autouse=True)
+def clean_houses_file():
+    if os.path.exists("houses.json"):
+        os.remove("houses.json")
+    yield
 
 @pytest.fixture
 def sample_owner():
