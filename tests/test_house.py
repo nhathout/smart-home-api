@@ -68,6 +68,10 @@ def test_negative_rooms_baths(valid_house):
         )
 
 def test_duplicate_house_id(valid_house):
+    # First, create the original house
+    create_house(valid_house)
+    
+    # Then create a new house with the same house_id => should conflict
     duplicate = House(
         house_id=valid_house.house_id,
         address="Different Address",
@@ -76,9 +80,10 @@ def test_duplicate_house_id(valid_house):
         num_rooms=0,
         num_baths=0
     )
-    
+
     with pytest.raises(ConflictError):
         create_house(duplicate)
+
 
 def test_update_nonexistent_house(sample_owner):
     house = House(
