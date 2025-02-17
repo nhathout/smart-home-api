@@ -12,8 +12,6 @@ The **Smart Home API** is a collection of Python modules that implement the foll
 - **Validation & Error Handling**: Ensures data integrity and proper exception raising.  
 - **In-Memory Storage**: For demonstration, data is stored in simple dictionaries (e.g., `users_db`, `houses_db`, etc.)—no external database is used.  
 
-We do *not* hook these modules up to external data sources or actual hardware; the emphasis is on **designing the APIs** and **demonstrating error handling** through function-level calls and unit tests.
-
 ---
 
 ## API Modules & Data Structures
