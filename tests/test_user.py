@@ -1,4 +1,13 @@
+import os
+
 import pytest
+
+@pytest.fixture(autouse=True)
+def clean_users_file():
+    if os.path.exists("users.json"):
+        os.remove("users.json")
+    yield
+
 from user import (
     User, PrivilegeLevel, 
     create_user, get_user, update_user, delete_user,
