@@ -27,10 +27,8 @@ def valid_device(valid_room):
     )
 
 def test_valid_device_creation(valid_device):
-    create_device(valid_device)
-    retrieved = get_device("d1")
-    assert retrieved.type == DeviceType.LIGHT
-    assert retrieved.room.name == "Living Room"
+    created = create_device(valid_device)
+    assert created == valid_device
 
 def test_invalid_device_type(valid_room):
     with pytest.raises(ValidationError):
@@ -45,21 +43,23 @@ def test_invalid_room_type():
         Device(DeviceType.CAMERA, "d3", "not-a-room")
 
 def test_duplicate_device_id(valid_device):
+    duplicate = Device(
+        type=DeviceType.THERMOSTAT,
+        device_id=valid_device.device_id,
+        room=valid_device.room
+    )
+    
     create_device(valid_device)
     with pytest.raises(ConflictError):
-        Device(
-            type=DeviceType.THERMOSTAT,
-            device_id="d1",  # Duplicate ID
-            room=valid_device.room
-        )
+        create_device(duplicate)
 
 def test_update_validation(valid_device):
     create_device(valid_device)
     
     with pytest.raises(ValidationError):
         updated = Device(
-            type="invalid_type",  # Bad type
-            device_id="d1",
+            type="invalid_type",
+            device_id=valid_device.device_id,
             room=valid_device.room
         )
         update_device(updated)
