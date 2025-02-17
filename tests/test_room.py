@@ -51,14 +51,11 @@ def test_duplicate_room_name(valid_room):
     with pytest.raises(ConflictError):
         create_room(valid_room)
 
-def test_update_validation(valid_room):
-    create_room(valid_room)
-    update_room(valid_room, "Noah's Room")
-    
+def test_update_validation(valid_room): 
     with pytest.raises(ValidationError):
         # updated = Room("Living Room", -2, valid_room.house)
         ## used to raise ValidationError, commented out for github actions
-        ##update_room(valid_room, "Noah's Room")
+        update_room(valid_room, "Noah's Room")
         print(valid_room.name)
         # my own test
 
