@@ -54,6 +54,7 @@ def test_invalid_privilege():
 def test_name_length_validation():
     with pytest.raises(ValidationError):
         User("u4", "", "test@example.com", PrivilegeLevel.RESIDENT)
+
     with pytest.raises(ValidationError):
         User("u5", "A" * 51, "test@example.com", PrivilegeLevel.RESIDENT)
 
@@ -64,3 +65,10 @@ def test_nonexistent_user_operations():
         update_user(User("non-existent", "Test", "test@example.com", PrivilegeLevel.OWNER))
     with pytest.raises(NotFoundError):
         delete_user("non-existent")
+
+def test_create_user_duplicate_id():
+    user = User("u6", "Valid", "valid@test.com", PrivilegeLevel.OWNER)
+    create_user(user)
+    
+    with pytest.raises(ConflictError):
+        create_user(user)

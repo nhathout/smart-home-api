@@ -8,6 +8,15 @@ class PrivilegeLevel(Enum):
 
 class User:
     def __init__(self, user_id: str, name: str, email: str, privilege: PrivilegeLevel):
+        if len(name) < 1 or len(name) > 50:
+            raise ValidationError("Name must be 1-50 characters")
+        
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            raise ValidationError("Invalid email format")
+        
+        if not isinstance(privilege, PrivilegeLevel):
+            raise ValidationError("Invalid privilege type")
+
         self.user_id = user_id
         self.name = name
         self.email = email
@@ -48,15 +57,8 @@ def validate_privilege(privilege: PrivilegeLevel):
 ## C R U D
 # Create
 def create_user(user: User) -> User:
-    # Input validation
-    validate_email(user.email)
-    validate_privilege(user.privilege)
-    
     if user.user_id in users_db:
-        raise ConflictError(f"User ID {user.user_id} already exists")
-    
-    if len(user.name) < 1 or len(user.name) > 50:
-        raise ValidationError("Name must be 1-50 characters")
+        raise ConflictError(f"User ID {user.user_id} exists")
     
     users_db[user.user_id] = user
     return user
