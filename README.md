@@ -19,10 +19,10 @@ Key focuses include:
 
 All the core domain logic (CRUD operations, validation, etc.) has been wrapped with FastAPI endpoints in **`main.py`**. You can run the API server locally with:
 
-```uvicorn main:app --reload```
+```uvicorn main:app --reload```<br>
 
-This will launch the FastAPI app, where you can access the **interactive docs** at: 
-```http://127.0.0.1:8000/docs```
+This will launch the FastAPI app at ```http://127.0.0.1:8000```.<br>
+- Go to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to see the interactive API documentation.
 
 There, you’ll find automatically generated documentation for **Users**, **Houses**, **Rooms**, and **Devices** endpoints, supporting all CRUD operations.
 
