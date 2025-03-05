@@ -26,7 +26,7 @@ from device import (
 
 app = FastAPI(
     title="Smart Home API",
-    description="CRUD operations for Users, Houses, Rooms, and Devices",
+    description="API for a smart home (nest-type) system, with separate implementations for Users, Houses, Rooms, and Devices",
     version="1.0.0",
 )
 
