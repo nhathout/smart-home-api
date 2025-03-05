@@ -22,7 +22,7 @@ All the core domain logic (CRUD operations, validation, etc.) has been wrapped w
 ```uvicorn main:app --reload```<br>
 
 This will launch the FastAPI app at ```http://127.0.0.1:8000```.<br>
-- Go to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to see the interactive API documentation.
+- Once launched, go to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to see the interactive API documentation.
 
 There, you’ll find automatically generated documentation for **Users**, **Houses**, **Rooms**, and **Devices** endpoints, supporting all CRUD operations.
 
