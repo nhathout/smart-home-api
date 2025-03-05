@@ -76,6 +76,7 @@ def house_to_dict(house: House) -> dict:
     }
 
 def house_from_dict(data: dict) -> House:
+    from user import User  # avoid circular import
     owner_data = data["owner"]
     owner = User(
         user_id=owner_data["user_id"],
@@ -83,7 +84,6 @@ def house_from_dict(data: dict) -> House:
         email=owner_data["email"],
         privilege=PrivilegeLevel(owner_data["privilege"])
     )
-
     return House(
         house_id=data["house_id"],
         address=data["address"],
@@ -93,10 +93,10 @@ def house_from_dict(data: dict) -> House:
         num_baths=data["num_baths"]
     )
 
-# C
+# ========== CRUD OPERATIONS ==========
+
 def create_house(house: House) -> House:
     houses_data = load_houses_from_json()
-    
     if house.house_id in houses_data:
         raise ConflictError(f"House ID {house.house_id} already exists")
     
@@ -104,19 +104,21 @@ def create_house(house: House) -> House:
     save_houses_to_json(houses_data)
     return house
 
-# R
 def get_house(house_id: str) -> House:
     houses_data = load_houses_from_json()
-    
     if house_id not in houses_data:
         raise HouseNotFoundError(f"House {house_id} not found")
-    
     return house_from_dict(houses_data[house_id])
 
-# U
+def get_all_houses() -> list[House]:
+    houses_data = load_houses_from_json()
+    house_list = []
+    for house_id, house_dict in houses_data.items():
+        house_list.append(house_from_dict(house_dict))
+    return house_list
+
 def update_house(updated_house: House) -> House:
     houses_data = load_houses_from_json()
-    
     if updated_house.house_id not in houses_data:
         raise HouseNotFoundError(f"House {updated_house.house_id} not found")
     
@@ -124,12 +126,9 @@ def update_house(updated_house: House) -> House:
     save_houses_to_json(houses_data)
     return updated_house
 
-# D
 def delete_house(house_id: str) -> None:
     houses_data = load_houses_from_json()
-    
     if house_id not in houses_data:
         raise HouseNotFoundError(f"House {house_id} not found")
-    
     del houses_data[house_id]
     save_houses_to_json(houses_data)

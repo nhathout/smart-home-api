@@ -2,8 +2,7 @@ import json
 import os
 from enum import Enum
 from typing import Optional
-
-from room import Room
+from room import Room, room_from_dict
 from house import House
 from user import User, PrivilegeLevel
 
@@ -26,6 +25,15 @@ class DeviceType(Enum):
     LOCK = "lock"
     SENSOR = "sensor"
 
+class DeviceNotFoundError(Exception):
+    pass
+
+class ValidationError(Exception):
+    pass
+
+class ConflictError(Exception):
+    pass
+
 class Device:
     def __init__(self, type: DeviceType, device_id: str, room: Room):
         if not isinstance(type, DeviceType):
@@ -45,15 +53,6 @@ class Device:
             and self.type == other.type
             and self.room == other.room
         )
-
-class DeviceNotFoundError(Exception):
-    pass
-
-class ValidationError(Exception):
-    pass
-
-class ConflictError(Exception):
-    pass
 
 def device_to_dict(device: Device) -> dict:
     return {
@@ -79,42 +78,17 @@ def device_to_dict(device: Device) -> dict:
     }
 
 def device_from_dict(data: dict) -> Device:
+    from room import room_from_dict
+    device_type = DeviceType(data["type"])
     room_data = data["room"]
-    house_data = room_data["house"]
-    owner_data = house_data["owner"]
+    # Reuse existing logic
+    room_obj = room_from_dict(room_data)
+    return Device(type=device_type, device_id=data["device_id"], room=room_obj)
 
-    owner_user = User(
-        user_id=owner_data["user_id"],
-        name=owner_data["name"],
-        email=owner_data["email"],
-        privilege=PrivilegeLevel(owner_data["privilege"])
-    )
+# ========== CRUD OPERATIONS ==========
 
-    house_obj = House(
-        house_id=house_data["house_id"],
-        address=house_data["address"],
-        owner=owner_user,
-        gps_location=tuple(house_data["gps_location"]),
-        num_rooms=house_data["num_rooms"],
-        num_baths=house_data["num_baths"]
-    )
-
-    room_obj = Room(
-        name=room_data["name"],
-        floor=room_data["floor"],
-        house=house_obj
-    )
-
-    return Device(
-        type=DeviceType(data["type"]),
-        device_id=data["device_id"],
-        room=room_obj
-    )
-
-# C
 def create_device(device: Device) -> Device:
     devices_data = load_devices_from_json()
-    
     if device.device_id in devices_data:
         raise ConflictError(f"Device ID {device.device_id} already exists")
     
@@ -122,19 +96,21 @@ def create_device(device: Device) -> Device:
     save_devices_to_json(devices_data)
     return device
 
-# R
 def get_device(device_id: str) -> Device:
     devices_data = load_devices_from_json()
-    
     if device_id not in devices_data:
         raise DeviceNotFoundError(f"Device {device_id} not found")
-    
     return device_from_dict(devices_data[device_id])
 
-# U
+def get_all_devices() -> list[Device]:
+    devices_data = load_devices_from_json()
+    device_list = []
+    for dev_id, dev_dict in devices_data.items():
+        device_list.append(device_from_dict(dev_dict))
+    return device_list
+
 def update_device(updated_device: Device) -> Device:
     devices_data = load_devices_from_json()
-    
     if updated_device.device_id not in devices_data:
         raise DeviceNotFoundError(f"Device {updated_device.device_id} not found")
     
@@ -142,12 +118,9 @@ def update_device(updated_device: Device) -> Device:
     save_devices_to_json(devices_data)
     return updated_device
 
-# D
 def delete_device(device_id: str) -> None:
     devices_data = load_devices_from_json()
-    
     if device_id not in devices_data:
         raise DeviceNotFoundError(f"Device {device_id} not found")
     del devices_data[device_id]
-    
     save_devices_to_json(devices_data)

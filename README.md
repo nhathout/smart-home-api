@@ -15,6 +15,21 @@ Key focuses include:
 
 ---
 
+## FastAPI Implementation
+
+All the core domain logic (CRUD operations, validation, etc.) has been wrapped with FastAPI endpoints in **`main.py`**. You can run the API server locally with:
+
+```uvicorn main:app --reload```
+
+This will launch the FastAPI app, where you can access the **interactive docs** at: 
+```http://127.0.0.1:8000/docs```
+
+There, you’ll find automatically generated documentation for **Users**, **Houses**, **Rooms**, and **Devices** endpoints, supporting all CRUD operations.
+
+The ```test_api.py``` file contains integration tests for these routes, using ```fastapi.testclient.TestClient```.
+
+---
+
 ## API Modules & Data Structures
 
 ### Users
@@ -121,13 +136,17 @@ Each module’s CRUD function loads data from its JSON, checks for conflicts or 
 
 ---
 
-## Unit Tests
+## Unit & Integration Tests
 Unit tests (written with **pytest**) verify both **happy-path** (valid) scenarios and various **error scenarios** (invalid inputs, non-existent resources, conflicts). Each module has a corresponding test file:
 
 - **`test_user.py`**: Verifies user creation, retrieval, updates, and deletions, plus invalid data checks.  
 - **`test_house.py`**: Validates house CRUD and ensures `HouseNotFoundError` is raised as needed.  
 - **`test_room.py`**: Covers rooms with proper references to houses.  
 - **`test_device.py`**: Ensures device type, IDs, and references to rooms are validated.  
+
+**(NEW) Intefration Tests**
+- Use ```fastapi.testclient.TestClient``` to send real HTTP requests to the in-memory FastAPI app.
+- Validate the endpoints (```/users```, ```/houses```, ```/rooms```, ```/devices```) behave as expected, including error cases.
 
 > **Important**: Because JSON files persist data across tests, any test that expects an empty store at the start may remove or reset the corresponding `.json` file before running. Alternatively, each test that requires data can explicitly create it first so the test remains self-contained.
 

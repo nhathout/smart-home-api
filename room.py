@@ -1,7 +1,6 @@
 import json
 import os
 from typing import Optional
-
 from house import House
 from user import User, PrivilegeLevel
 
@@ -68,71 +67,52 @@ def room_to_dict(room: Room) -> dict:
     }
 
 def room_from_dict(data: dict) -> Room:
-    house_data = data["house"]
-    owner_data = house_data["owner"]
+    from house import House, house_from_dict
+    # Instead of re-implementing, just parse the house dict the same way
+    house_obj = house_from_dict(data["house"])
+    return Room(name=data["name"], floor=data["floor"], house=house_obj)
 
-    owner_user = User(
-        user_id=owner_data["user_id"],
-        name=owner_data["name"],
-        email=owner_data["email"],
-        privilege=PrivilegeLevel(owner_data["privilege"])
-    )
-    house_obj = House(
-        house_id=house_data["house_id"],
-        address=house_data["address"],
-        owner=owner_user,
-        gps_location=tuple(house_data["gps_location"]),
-        num_rooms=house_data["num_rooms"],
-        num_baths=house_data["num_baths"]
-    )
-    return Room(
-        name=data["name"],
-        floor=data["floor"],
-        house=house_obj
-    )
+# ========== CRUD OPERATIONS ==========
 
-# C
 def create_room(room: Room) -> Room:
     rooms_data = load_rooms_from_json()
-
     if room.name in rooms_data:
         raise ConflictError(f"Room '{room.name}' already exists")
-
     rooms_data[room.name] = room_to_dict(room)
     save_rooms_to_json(rooms_data)
     return room
 
-# R
 def get_room(room_name: str) -> Room:
     rooms_data = load_rooms_from_json()
-
     if room_name not in rooms_data:
         raise RoomNotFoundError(f"Room '{room_name}' not found")
-    
     return room_from_dict(rooms_data[room_name])
 
-# U
+def get_all_rooms() -> list[Room]:
+    rooms_data = load_rooms_from_json()
+    room_list = []
+    for rname, rdict in rooms_data.items():
+        room_list.append(room_from_dict(rdict))
+    return room_list
+
 def update_room(old_room: Room, new_room_name: str) -> Room:
     rooms_data = load_rooms_from_json()
-
     if old_room.name not in rooms_data:
         raise RoomNotFoundError(f"Room '{old_room.name}' not found")
 
     existing_room = room_from_dict(rooms_data[old_room.name])
     del rooms_data[old_room.name]
 
+    # Update the name (and/or any other attributes) as needed
     existing_room.name = new_room_name
 
     rooms_data[new_room_name] = room_to_dict(existing_room)
     save_rooms_to_json(rooms_data)
     return existing_room
 
-# D
 def delete_room(room_name: str) -> None:
     rooms_data = load_rooms_from_json()
-
     if room_name not in rooms_data:
         raise RoomNotFoundError(f"Room '{room_name}' not found")
-    
     del rooms_data[room_name]
     save_rooms_to_json(rooms_data)
